@@ -1,7 +1,0 @@
-pandas
-numpy
-streamlit
-matplotlib
-great-expectations
-setuptools
-scipy
