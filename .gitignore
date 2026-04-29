@@ -1,5 +1,6 @@
 venv/
-data/raw/
+data/
 reports/
 __pycache__/
 *.pyc
+*.csv

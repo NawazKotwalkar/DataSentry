@@ -3,5 +3,4 @@ numpy
 streamlit
 matplotlib
 great-expectations
-ydata-profiling
 setuptools
