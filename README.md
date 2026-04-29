@@ -197,7 +197,7 @@ a skill this project demonstrates.
 
 ## Live Demo
 
-🚀 **[Launch DataSentry](YOUR_STREAMLIT_URL_HERE)**
+🚀 **[Launch DataSentry](https://datasentry.streamlit.app/)**
 
 Upload any CSV to see the full analysis in action.
 
