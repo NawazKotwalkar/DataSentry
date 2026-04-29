@@ -1,5 +1,4 @@
-```markdown
-# 🛡️ DataSentry — Data Quality Intelligence Platform
+### 🛡️ DataSentry — Data Quality Intelligence Platform
 
 > A general-purpose data quality monitoring tool that scores data health,
 > detects anomalies, and quantifies the business cost of bad data — instantly.
