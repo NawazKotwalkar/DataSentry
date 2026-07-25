@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from src.ingest import ingest
 
-# Cost constants
 COST_PER_NULL = 500
 COST_PER_DUPLICATE = 50
 COST_PER_OUTLIER = 300

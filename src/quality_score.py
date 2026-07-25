@@ -1,7 +1,6 @@
 import pandas as pd
 from src.ingest import ingest
 
-
 def calculate_completeness(df: pd.DataFrame) -> float:
     
     total_cells = df.shape[0] * df.shape[1]

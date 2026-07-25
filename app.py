@@ -7,27 +7,21 @@ from datetime import datetime
 import io
 import sys
 import os
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 from src.ingest import ingest
 from src.quality_score import calculate_quality_score
 from src.rules_engine import run_rules_engine
-
 st.set_page_config(
     page_title="DataSentry",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* ═══════════════════════════════════
-   TOKENS
-═══════════════════════════════════ */
+
 :root {
     --ink:        #111827;
     --ink-2:      #374151;
@@ -61,9 +55,6 @@ st.markdown("""
     --s4: 0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);
 }
 
-/* ═══════════════════════════════════
-   RESET
-═══════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;}
 html,body,[class*="css"],.stApp{
     font-family:'Plus Jakarta Sans',-apple-system,sans-serif !important;
