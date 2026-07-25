@@ -1,0 +1,11 @@
+customer_id,email,order_amount,status
+1,alice@example.com,120.50,pending
+2,bob@example.com,89.99,shipped
+2,bob@example.com,89.99,shipped
+3,not-an-email,45.00,delivered
+4,dana@example.com,-15.00,cancelled
+5,evan@example.com,9999.00,unknown_status
+6,fay@example.com,200.00,pending
+7,,150.00,shipped
+8,greg@example.com,175.25,delivered
+9,hana@example.com,110.10,pending

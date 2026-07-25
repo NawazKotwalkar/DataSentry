@@ -1,0 +1,43 @@
+{
+  "run_at": "2026-07-25T17:48:58.883015+00:00",
+  "row_count": 10,
+  "column_count": 4,
+  "score": 95.0,
+  "component_scores": {
+    "nulls": 97.5,
+    "duplicates": 80.0,
+    "format_issues": 100.0,
+    "outliers": 97.5,
+    "rule_violations": 100.0
+  },
+  "total_cost": 6.0,
+  "cost_breakdown": {
+    "null_cost": 0.5,
+    "duplicate_cost": 4.0,
+    "format_cost": 0.0,
+    "outlier_cost": 1.5,
+    "rule_violation_cost": 0.0
+  },
+  "issues": [
+    {
+      "type": "null",
+      "column": "email",
+      "detail": "10.0% null"
+    },
+    {
+      "type": "duplicate",
+      "column": null,
+      "detail": "2 exact duplicate rows"
+    },
+    {
+      "type": "outlier",
+      "column": "order_amount",
+      "detail": "1 outliers via iqr (10.0%)"
+    },
+    {
+      "type": "outlier",
+      "column": "customer_id,order_amount",
+      "detail": "1 outliers via isolation_forest (10.0%)"
+    }
+  ]
+}

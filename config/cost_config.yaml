@@ -1,0 +1,5 @@
+cost_per_null: 0.50
+cost_per_duplicate_row: 2.00
+cost_per_format_error: 1.00
+cost_per_outlier: 1.50
+cost_per_rule_violation: 1.00
