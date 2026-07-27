@@ -12,5 +12,6 @@ psycopg2-binary>=2.9
 python-multipart>=0.0.9
 pydantic>=2.0
 
-# Added in later build steps:
-# streamlit
+# Step 3 — Dashboard
+streamlit>=1.32
+requests>=2.31
