@@ -1,286 +1,146 @@
-### 🛡️ DataSentry — Data Quality Intelligence Platform
+# 🛡️ DataSentry
 
-> A general-purpose data quality monitoring tool that scores data health,
-> detects anomalies, and quantifies the business cost of bad data — instantly.
+**A data quality intelligence platform — score, audit, and quantify the cost of bad data, from a quick CSV check to a fully served API and dashboard.**
 
-<<<<<<< HEAD
 ![Python](https://img.shields.io/badge/Python-3.12-blue?style=flat-square&logo=python)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.50-red?style=flat-square&logo=streamlit)
-![Great Expectations](https://img.shields.io/badge/Great_Expectations-1.17-orange?style=flat-square)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110-teal?style=flat-square&logo=fastapi)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.32-red?style=flat-square&logo=streamlit)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?style=flat-square&logo=postgresql)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 ---
-=======
-## Status: Step 2 complete — Engine + CLI + API + Postgres
 
-Step 1 (pure engine + CLI) still works standalone with no server or database.
-Step 2 adds a FastAPI layer that persists every audit run to Postgres via
-SQLAlchemy, plus a live-DB-table audit path. Streamlit dashboard and Docker
-compose-up-everything (Step 3–4) are not part of this drop yet.
->>>>>>> feature/api-postgres-integration
+## Overview
 
-## The Problem
+Bad data quietly costs organizations money long before anyone notices — silently corrupting pipelines, models, and decisions. Most tools tell you *what* is wrong. DataSentry tells you *what it costs*, and gives you two ways to get there:
 
-Organizations lose millions annually not because they lack data — but because
-no one is watching its quality. Bad data silently corrupts pipelines, models,
-and business decisions before anyone notices.
+- **A pure, dependency-free audit engine and CLI** — point it at any CSV and get a health score in seconds
+- **A full-stack service** — a FastAPI backend with Postgres persistence and a Streamlit dashboard, for teams that want a running, shareable tool rather than a one-off script
 
-Most tools tell you **what** is wrong. DataSentry tells you **what it costs**.
+Both share the same core philosophy: profile the data, find the problems, score the damage, and put a number on what it's costing you.
 
 ---
 
-## What DataSentry Does
+## What It Does
 
-Point it at any CSV dataset and it instantly:
+Point DataSentry at a dataset and it will:
 
-- Scores data health from **0 to 100** across 4 quality dimensions
-- Detects issues — nulls, duplicates, outliers, schema drift, negative values
-- Quantifies the **business cost** of every issue in rupees
-- Prioritizes fixes ranked by financial impact
-- Auto-generates a **data dictionary** for any dataset
-- Tracks **quality trends** across multiple uploads
-- Compares **two datasets** side by side
-
----
-
-## Quality Score Dimensions
-
-| Dimension | Weight | What it measures |
-|-----------|--------|-----------------|
-| Completeness | 45% | Missing and null values |
-| Uniqueness | 25% | Duplicate records |
-| Validity | 20% | Values within expected ranges |
-| Consistency | 10% | Logical contradictions in data |
-
-**Score Interpretation:**
-
-| Score | Status | Action |
-|-------|--------|--------|
-| 95 – 100 | 🟢 Healthy | Monitor quarterly |
-| 80 – 94 | 🟡 Warning | Resolve within 48 hours |
-| Below 80 | 🔴 Critical | Immediate remediation required |
+- Score overall data health on a **0–100 scale**
+- Detect **nulls, duplicates, malformed formats, and outliers** (statistical and ML-based)
+- Apply your own **custom validation rules**
+- Estimate the **dollar cost** of every issue found
+- Track **quality trends** over time, run over run
+- Serve results through a **REST API** and a **visual dashboard** — not just a terminal printout
 
 ---
 
-## Business Impact Layer
-
-Every issue detected gets a rupee cost attached — not just a count:
+## Architecture
 
 ```
-342 nulls in Total Spend column     →  ₹1,84,000 in unprocessable transactions
-6,000 duplicate records detected    →  ₹3,00,000 in double-processed refunds  
-1,366 high churn-risk customers     →  ₹27,32,000 revenue at risk
-─────────────────────────────────────────────────────
-Total estimated cost of bad data    →  ₹59,00,030
+DataSentry/
+├── engine/          # pure Python + pandas + scikit-learn — no FastAPI, no DB, no UI
+│   ├── profiler.py       # per-column stats: type, null %, unique count, min/max, top values
+│   ├── duplicates.py     # row-level + key-based duplicate detection
+│   ├── formats.py        # regex checks: emails, phones, mixed date formats
+│   ├── outliers.py       # IQR / z-score + Isolation Forest
+│   ├── rules.py          # user-defined YAML/JSON validation rules
+│   ├── scoring.py        # weighted formula → per-column and per-dataset health score
+│   ├── cost.py           # dollar cost estimate per issue type
+│   └── audit.py          # orchestrator: run_audit(df, rules, cost_config) -> AuditReport
+│
+├── models/          # SQLAlchemy ORM + Postgres
+│   ├── database.py       # engine/session setup, get_db() dependency
+│   ├── schema.py         # Source, AuditRun, ColumnStat, Issue, RuleConfig tables
+│   └── crud.py           # save_report(), get_history(), etc.
+│
+├── api/             # FastAPI service
+│   ├── main.py
+│   ├── schemas.py         # Pydantic request/response models
+│   └── routes/            # audit.py, reports.py, trends.py
+│
+├── dashboard/       # Streamlit — talks only to the API over HTTP, never imports engine/ directly
+│   └── app.py
+│
+├── config/
+│   ├── rules.example.yaml
+│   └── cost_config.yaml
+│
+├── tests/           # unit coverage across engine, CRUD, and audit orchestration
+├── cli.py           # `python cli.py audit data.csv` — no server needed
+├── sample_data.csv  # sample dataset with planted issues, for trying the CLI
+├── docker-compose.yml, Dockerfile.api, Dockerfile.dashboard
+└── requirements.txt
 ```
 
-This business cost layer is what separates DataSentry from standard
-data quality tools that report counts and percentages only.
+**The rule that holds the core together:** `engine/` never imports FastAPI, SQLAlchemy, or Streamlit. It takes a DataFrame in, returns a plain `AuditReport` dataclass out. The API, the dashboard, and Docker are all adapters built around that pure core — not entangled with it.
 
-<<<<<<< HEAD
 ---
-=======
+
+## Getting Started
+
+### Option A — Just the engine and CLI (fastest path, no server needed)
+
 ```bash
+pip install -r requirements.txt
 python cli.py audit sample_data.csv
 python cli.py audit sample_data.csv --rules config/rules.example.yaml --key-columns customer_id
 python cli.py audit sample_data.csv --json report.json
 ```
 
-## Run the API (Step 2)
+### Option B — Full stack: API + Postgres + dashboard
 
-Start a local Postgres instance:
+**1. Start Postgres** (locally installed, or via `docker-compose up postgres`)
 
-```bash
-docker-compose up -d
-```
-
-Then run the API:
-
+**2. Run the API**
 ```bash
 uvicorn api.main:app --reload
 ```
-
 Docs at `http://127.0.0.1:8000/docs`. Key endpoints:
 
-- `POST /audit/upload` — multipart CSV upload, optional `?key_columns=id,other`
-- `POST /audit/db-table` — body: `{"connection_string": "...", "table_name": "...", "options": {...}}`
-- `GET /sources` — list every dataset that's been audited
-- `GET /audit-runs/{id}` — full detail for one run, including column stats and issues
-- `GET /trends/{source_id}` — health score history for a source, most recent first
+| Endpoint | Purpose |
+|---|---|
+| `POST /audit/upload` | Audit an uploaded CSV |
+| `POST /audit/db-table` | Audit a live database table via a connection string |
+| `GET /sources` | List every dataset audited so far |
+| `GET /audit-runs/{id}` | Full detail for one run — column stats and issues |
+| `GET /trends/{source_id}` | Health score and cost history for a source |
 
-By default the API connects to `postgresql://datasentry:datasentry@localhost:5432/datasentry`.
-Override with a `DATABASE_URL` environment variable.
+By default the API connects to `postgresql://datasentry:datasentry@localhost:5432/datasentry`. Override with a `DATABASE_URL` environment variable to point at any Postgres instance, including a managed one like Neon.
 
-## Run tests
+**3. Run the dashboard**
+```bash
+streamlit run dashboard/app.py
+```
+Opens at `http://localhost:8501` with four tabs: **Upload CSV**, **Connect DB table**, **Sources & history**, and **Trends**. Override `DATASENTRY_API_URL` if the API isn't running on the default local address.
 
+### Run tests
 ```bash
 pytest tests/
 ```
->>>>>>> feature/api-postgres-integration
-
-`tests/test_crud.py` runs against an in-memory SQLite DB, so it doesn't
-require Postgres to be running.
-
-## Architecture
-
-```
-<<<<<<< HEAD
-Any CSV File
-      ↓
-Layer 1 — Ingestion & Schema Validation
-          src/ingest.py
-          Loads data, validates schema, detects dtype drift, logs issues
-      ↓
-Layer 2 — Quality Scoring Engine (0–100)
-          src/quality_score.py
-          Scores completeness, uniqueness, validity, consistency
-      ↓
-Layer 3 — Business Rules Engine
-          src/rules_engine.py
-          Auto-detects issues using IQR, null checks, duplicate detection
-          Attaches rupee cost to every finding
-      ↓
-Layer 4 — Dashboard & Reports
-          app.py
-          Streamlit UI — score display, issue breakdown, data dictionary,
-          comparison, trend tracking, executive summary
-=======
-datasentry/
-├── engine/          # pure Python + pandas + sklearn — no FastAPI, no DB, no I/O
-│   ├── profiler.py      # per-column stats: type, null %, unique count, min/max, top values
-│   ├── duplicates.py    # row-level + key-based duplicate detection
-│   ├── formats.py       # regex checks: emails, phones, mixed date formats
-│   ├── outliers.py      # IQR/z-score AND Isolation Forest
-│   ├── rules.py         # applies user-defined YAML/JSON validation rules
-│   ├── scoring.py       # weighted formula → per-column and per-dataset health score
-│   ├── cost.py          # $ business-cost estimate per issue type
-│   └── audit.py         # orchestrator: run_audit(df, rules, cost_config) -> AuditReport
-├── models/          # SQLAlchemy ORM + Postgres
-│   ├── database.py      # engine/session setup, get_db() dependency
-│   ├── schema.py         # Source, AuditRun, ColumnStat, Issue, RuleConfig tables
-│   └── crud.py           # save_report(), get_history(), etc.
-├── api/             # FastAPI
-│   ├── main.py
-│   ├── schemas.py         # Pydantic request/response models
-│   └── routes/            # audit.py, reports.py, trends.py
-├── config/
-│   ├── rules.example.yaml
-│   └── cost_config.yaml
-├── tests/
-├── cli.py           # `python cli.py audit data.csv` — no server needed
-├── sample_data.csv  # sample dataset with planted issues, for trying the CLI
-├── docker-compose.yml  # local Postgres for API dev/testing
-└── requirements.txt
->>>>>>> feature/api-postgres-integration
-```
+`tests/test_crud.py` runs against an in-memory SQLite database, so it doesn't require Postgres to be running.
 
 ---
 
-## Dashboard Features
+## Roadmap
 
-<<<<<<< HEAD
-| Feature | Description |
-|---------|-------------|
-| Quality Score | Single 0–100 health score with HEALTHY / WARNING / CRITICAL status |
-| Dimension Breakdown | Visual breakdown of all 4 quality dimensions |
-| Business Impact | Every issue ranked by rupee cost |
-| Action Queue | Prioritized fix list — highest cost issues first |
-| Column Deep Dive | Per-column stats, distribution, null analysis |
-| Data Dictionary | Auto-generated schema documentation for any dataset |
-| Dataset Comparison | Side-by-side quality comparison of two CSVs |
-| Score Trend | Quality score tracking across multiple uploads |
-| Executive Summary | Plain-English paragraph summarizing findings |
+DataSentry is under active development. Coming soon:
 
----
-
-## Quick Start
-
-```bash
-# Clone the repo
-git clone https://github.com/NawazKotwalkar/DataSentry.git
-cd DataSentry
-
-# Create virtual environment
-python -m venv venv
-
-# Activate — Windows
-venv\Scripts\activate
-
-# Activate — Mac/Linux
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the app
-streamlit run app.py
-```
+- 🐳 **Docker** — a single `docker-compose up` bringing up Postgres, the API, and the dashboard together, no manual setup required
+- 🎨 **UI refresh** — a more polished, portfolio-ready dashboard experience: better visual hierarchy, richer issue drill-downs, and clearer trend visualizations
 
 ---
 
 ## Tech Stack
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| Python | 3.12 | Core language |
-| Pandas | 2.3 | Data manipulation |
-| Great Expectations | 1.17 | Rules validation engine |
-| Streamlit | 1.50 | Dashboard and UI |
-| Matplotlib | 3.10 | Charts and visualizations |
-| ydata-profiling | 4.18 | EDA reporting |
-
----
-
-## Project Structure
-
-```
-DataSentry/
-├── src/
-│   ├── ingest.py           # Data ingestion & schema validation
-│   ├── quality_score.py    # 4-dimension quality scoring engine
-│   └── rules_engine.py     # Business rules & cost quantification
-├── app.py                  # Streamlit dashboard
-├── eda.py                  # Exploratory data analysis
-├── requirements.txt
-└── README.md
-```
-
----
-
-## How It Compares
-
-| Capability | DataSentry | Standard Tools |
-|------------|------------|----------------|
-| Works on any CSV | ✅ | ❌ Often dataset-specific |
-| Business cost in ₹ | ✅ | ❌ Counts and percentages only |
-| Auto data dictionary | ✅ | ❌ Manual documentation |
-| Fix priority queue | ✅ | ❌ No prioritization |
-| Dataset comparison | ✅ | ❌ Single dataset |
-| Executive summary | ✅ | ❌ Technical output only |
-| Open source & lightweight | ✅ | ❌ Enterprise tools cost $50K+/year |
-
----
-
-## Development Note
-
-This project used AI-assisted development (Claude by Anthropic) for UI
-scaffolding, CSS styling, and code iteration — a standard practice in
-modern software development.
-
-The core logic including the quality scoring algorithm, business rules
-engine, ingestion pipeline, cost quantification framework, and
-architectural decisions were designed and validated by the author.
-
-Leveraging AI tooling to ship production-quality work faster is itself
-a skill this project demonstrates.
-
----
-
-## Live Demo
-
-🚀 **[Launch DataSentry](https://datasentry.streamlit.app/)**
-
-Upload any CSV to see the full analysis in action.
+| Layer | Technology |
+|---|---|
+| Audit engine | Python, Pandas, scikit-learn |
+| API | FastAPI, Pydantic |
+| Database | PostgreSQL + SQLAlchemy ORM |
+| Dashboard | Streamlit |
+| Config | YAML / JSON |
+| Testing | pytest |
+| Infra (in progress) | Docker + docker-compose |
 
 ---
 
@@ -290,11 +150,3 @@ Upload any CSV to see the full analysis in action.
 
 - 🔗 [LinkedIn](https://linkedin.com/in/nawazkotwalkar)
 - 🐙 [GitHub](https://github.com/NawazKotwalkar)
-
----
-=======
-1. **Streamlit dashboard** — upload/connect UI, score display, issue
-   drill-down, anomaly chart, trend line.
-2. **Docker** — expand `docker-compose.yml` so `docker-compose up` brings up
-   Postgres, the API, and the dashboard together in one command.
->>>>>>> feature/api-postgres-integration
