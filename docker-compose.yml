@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: datasentry
+      POSTGRES_PASSWORD: datasentry
+      POSTGRES_DB: datasentry
+    ports:
+      - "5432:5432"
+    volumes:
+      - datasentry_pgdata:/var/lib/postgresql/data
+
+volumes:
+  datasentry_pgdata:
