@@ -10,6 +10,15 @@
 
 ---
 
+## Live Demo
+
+- 🚀 **Dashboard:** [datasentry.streamlit.app](https://datasentry.streamlit.app/)
+- 📘 **API docs:** [datasentry-07z4.onrender.com/docs](https://datasentry-07z4.onrender.com/docs)
+
+The API runs on Render's free tier, so it spins down after periods of inactivity — the first request after idle time may take 30–50 seconds to wake up.
+
+---
+
 ## Overview
 
 Bad data quietly costs organizations money long before anyone notices — silently corrupting pipelines, models, and decisions. Most tools tell you *what* is wrong. DataSentry tells you *what it costs*, and gives you two ways to get there:
