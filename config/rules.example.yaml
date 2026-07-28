@@ -1,0 +1,23 @@
+rules:
+  - name: customer_id_required
+    column: customer_id
+    type: not_null
+
+  - name: customer_id_unique
+    column: customer_id
+    type: unique
+
+  - name: order_amount_positive
+    column: order_amount
+    type: min_value
+    value: 0
+
+  - name: status_allowed_values
+    column: status
+    type: allowed_values
+    values: ["pending", "shipped", "delivered", "cancelled"]
+
+  - name: email_basic_pattern
+    column: email
+    type: regex
+    pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
