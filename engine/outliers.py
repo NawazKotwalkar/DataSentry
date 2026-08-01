@@ -77,13 +77,32 @@ def detect_outliers_isolation_forest(
     )
 
 
+def is_likely_identifier(series: pd.Series, uniqueness_threshold: float = 0.95) -> bool:
+    """Heuristic: a column where almost every non-null value is unique is very
+    likely an identifier (customer_id, order_id, a zip/postal code, etc.),
+    not a measurable quantity — outlier detection on it is meaningless
+    ("90210 is far from 10001" is not a data quality issue)."""
+    non_null = series.dropna()
+    if len(non_null) < 10:
+        return False
+    return (non_null.nunique() / len(non_null)) >= uniqueness_threshold
+
+
 def run_outlier_checks(
     df: pd.DataFrame,
     numeric_columns: list[str] | None = None,
     include_multivariate: bool = True,
+    skip_identifier_columns: bool = True,
+    identifier_uniqueness_threshold: float = 0.95,
 ) -> list[OutlierReport]:
     if numeric_columns is None:
         numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+
+    if skip_identifier_columns:
+        numeric_columns = [
+            col for col in numeric_columns
+            if not is_likely_identifier(df[col], identifier_uniqueness_threshold)
+        ]
 
     reports: list[OutlierReport] = []
     for col in numeric_columns:

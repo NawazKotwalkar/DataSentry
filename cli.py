@@ -52,7 +52,8 @@ def cmd_audit(args: argparse.Namespace) -> None:
     for component, value in report.score.component_scores.items():
         print(f"  {component:>16}: {value}")
 
-    print(f"\nEstimated cost of issues: ${report.cost_estimate.total_cost:,.2f}")
+    print(f"\nSeverity-weighted cost estimate: ${report.cost_estimate.total_cost:,.2f}")
+    print("  (configurable heuristic — see config/cost_config.yaml — not a validated financial figure)")
     for component, value in report.cost_estimate.breakdown.items():
         if value:
             print(f"  {component:>20}: ${value:,.2f}")

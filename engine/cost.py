@@ -1,4 +1,12 @@
-"""Estimates the dollar business cost of data quality issues, per user-defined multipliers."""
+"""Severity-weighted cost estimate for data quality issues.
+
+IMPORTANT: this is NOT a validated financial estimate. It is a configurable
+heuristic — issue counts multiplied by user-supplied per-issue weights
+(see cost_config.yaml). Treat the dollar figure as a relative severity
+score expressed in dollar units, not as a researched or audited cost.
+Users should override DEFAULT_COST_CONFIG with values grounded in their
+own business context before treating the output as decision-relevant.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass

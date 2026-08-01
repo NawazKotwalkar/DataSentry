@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=32&pause=1000&color=2EA3F2&center=true&vCenter=true&width=600&lines=DataSentry;Score+Your+Data's+Health;Quantify+the+Cost+of+Bad+Data;Audit.+Score.+Track.+Repeat." alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=32&pause=1000&color=2EA3F2&center=true&vCenter=true&width=600&lines=DataSentry;Score+Your+Data's+Health;Severity-Weighted+Issue+Scoring;Audit.+Score.+Track.+Repeat." alt="Typing SVG" />
 
-<p><strong>A data quality intelligence platform — score, audit, and quantify the cost of bad data, from a quick CSV check to a fully served API and dashboard.</strong></p>
+<p><strong>A data quality auditing platform — score, audit, and rank the severity of data issues, from a quick CSV check to a fully served API and dashboard.</strong></p>
 
 <p>
   <img src="https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python&logoColor=white" />
@@ -55,12 +55,12 @@
 
 ## 🔎 Overview
 
-Bad data quietly costs organizations money long before anyone notices — silently corrupting pipelines, models, and decisions. Most tools tell you *what* is wrong. DataSentry tells you **what it costs**, and gives you two ways to get there:
+Bad data quietly costs organizations time and trust long before anyone notices — silently corrupting pipelines, models, and decisions. DataSentry tells you *what's wrong* and gives every issue a **severity-weighted score** you configure yourself, so the output reflects your priorities, not an invented industry average.
 
 - **A pure, dependency-free audit engine and CLI** — point it at any CSV and get a health score in seconds, no server required
 - **A full-stack service** — a FastAPI backend with Postgres persistence and a Streamlit dashboard, for a running, shareable tool rather than a one-off script
 
-Both share the same core philosophy: profile the data, find the problems, score the damage, and put a number on what it's costing you.
+Both share the same core philosophy: profile the data, find the problems, and rank them by a severity weight you control.
 
 ---
 
@@ -74,16 +74,16 @@ Both share the same core philosophy: profile the data, find the problems, score 
 Every dataset gets a single 0–100 score, broken down across five weighted dimensions: nulls, duplicates, format issues, outliers, and rule violations.
 
 **🔍 Issue Detection**
-Nulls, exact and key-based duplicates, malformed emails/phones/dates, statistical outliers (IQR + z-score), and multivariate anomalies (Isolation Forest).
+Nulls, exact and key-based duplicates, malformed emails/phones/dates, statistical outliers (IQR + z-score), and multivariate anomalies (Isolation Forest). Columns that are almost entirely unique values (IDs, zip codes) are automatically excluded from outlier checks — a customer ID being numerically far from another isn't a data quality issue.
 
 </td>
 <td width="50%">
 
-**💰 Cost Estimation**
-Every issue type carries a configurable dollar cost, rolled up into a total "what this is costing you" figure.
+**💰 Severity-Weighted Scoring**
+Every issue type carries a configurable weight (in `config/cost_config.yaml`), rolled into a total figure. This is a heuristic you tune to your own priorities — not a validated financial estimate.
 
 **📈 Trend Tracking**
-Every audit run is persisted, so you can watch a dataset's health score and cost rise or fall over time.
+Every audit run is persisted, so you can watch a dataset's health score and severity-weighted total rise or fall over time.
 
 </td>
 </tr>
@@ -95,7 +95,7 @@ Every audit run is persisted, so you can watch a dataset's health score and cost
 
 1. Open the **[live dashboard](https://datasentry.streamlit.app/)**
 2. Upload the included `sample_data.csv` (or any CSV of your own) in the **Upload CSV** tab
-3. Watch the health score, cost estimate, column profile, and issue breakdown render instantly
+3. Watch the health score, severity-weighted cost estimate, column profile, and issue breakdown render instantly
 4. Check the **Trends** tab to see the score plotted across every run so far
 
 No installation needed to try it — the dashboard talks to the live, publicly hosted API.
@@ -113,7 +113,7 @@ DataSentry/
 │   ├── outliers.py       # IQR / z-score + Isolation Forest
 │   ├── rules.py          # user-defined YAML/JSON validation rules
 │   ├── scoring.py        # weighted formula → per-column and per-dataset health score
-│   ├── cost.py           # dollar cost estimate per issue type
+│   ├── cost.py           # severity-weighted score per issue type (configurable, not validated $)
 │   └── audit.py          # orchestrator: run_audit(df, rules, cost_config) -> AuditReport
 │
 ├── models/          # SQLAlchemy ORM + Postgres
@@ -213,7 +213,7 @@ python cli.py audit sample_data.csv --json report.json
 
 ### 2. Upload CSV (Dashboard & API)
 
-**Via the dashboard:** open the **Upload CSV** tab, choose a file, optionally enter key columns, click **Run audit**. Results — health score, cost estimate, column profile table, and an issue-type breakdown — render immediately below.
+**Via the dashboard:** open the **Upload CSV** tab, choose a file, optionally enter key columns, click **Run audit**. Results — health score, severity-weighted cost estimate, column profile table, and an issue-type breakdown — render immediately below.
 
 **Via the API directly:**
 
@@ -229,24 +229,27 @@ Returns a JSON summary with the audit run's `id`, `health_score`, `total_cost`, 
 
 ### 3. Connect DB Table (live database auditing)
 
-Audit a table in *any* database you have credentials for — without ever storing that connection string anywhere.
+Audit a table in *any* database you have credentials for — the same engine that powers CSV uploads, pointed at a live table via `pandas.read_sql_table()`.
 
-**Step-by-step, using the live dashboard:**
+> ⚠️ **Disabled in the public demo, by design.** Typing live database credentials into a hosted web form is a real risk — a password can pass through server memory, request logs, and crash traces even when nothing is intentionally stored. Rather than ask you to trust a warning label, this feature is **off by default** on the public dashboard. The `"Connect DB table"` tab explains this and points here.
 
-1. Open the **[live dashboard](https://datasentry.streamlit.app/)**
-2. Click the **"Connect DB table"** tab
-3. Fill in **"SQLAlchemy connection string"** with the full address of the database you want audited:
+**To try it yourself, locally, against a database you control:**
+
+1. Run the API and dashboard locally (see [Getting Started](#-getting-started))
+2. Set an environment variable before starting the dashboard:
+   ```bash
+   export ENABLE_DB_AUDIT_UI=true   # Windows: set ENABLE_DB_AUDIT_UI=true
+   streamlit run dashboard/app.py
    ```
-   postgresql://username:password@host:5432/database_name
-   ```
-   This can be any Postgres instance you control — a local database, a managed one like Neon, or any SQL database SQLAlchemy supports.
-4. Fill in **"Table name"** with the specific table inside that database you want checked, e.g. `orders` or `customers`
-5. Optionally fill in **"Key column(s)"** — comma-separated columns that should be unique (like an `id`), used to detect duplicate rows
-6. Click **"Run audit"**
+3. In the now-visible form, fill in:
 
-What happens next: the API connects to that external database, pulls the table into memory with `pandas.read_sql_table()`, runs it through the exact same engine as CSV uploads (nulls, duplicates, outliers, rules, cost estimate), and returns the results in the same result view — health score, cost estimate, column profile, issue breakdown. The connection string itself is **never saved** — only the audit *results* get persisted, same as any other run.
+   | Field | Example |
+   |---|---|
+   | SQLAlchemy connection string | `postgresql://user:password@host:5432/dbname` |
+   | Table name | `orders` |
+   | Key column(s) | `order_id` |
 
-> ⚠️ Only point this at databases you own or have explicit permission to audit. Since you're typing a real password into a form, rotate that credential afterward if you were only using it to test.
+4. Click **"Run audit"** — results render the same as a CSV upload. The connection string is never persisted; only the audit *results* are saved, same as any other run.
 
 **Need test data to try this against?** `scripts/generate_test_data.sql` creates two tables — `customers` and `orders` — with 50,000 rows each and realistic, intentionally planted data quality issues (nulls, duplicates, negative values, inconsistent formatting). Run it with:
 
@@ -254,12 +257,10 @@ What happens next: the API connects to that external database, pulls the table i
 psql "your_connection_string" -f scripts/generate_test_data.sql
 ```
 
-Then point the dashboard's "Connect DB table" tab at the resulting `customers` or `orders` table for a genuinely meaningful test, instead of the small sample CSV.
-
-**Via the API directly:**
+**Via the API directly** (same opt-in reasoning applies — only point this at a database you own):
 
 ```bash
-curl -X POST "https://datasentry-07z4.onrender.com/audit/db-table" \
+curl -X POST "http://127.0.0.1:8000/audit/db-table" \
   -H "Content-Type: application/json" \
   -d '{
     "connection_string": "postgresql://user:password@host:5432/dbname",
@@ -280,8 +281,8 @@ Every dataset you've ever audited — CSV or DB table — shows up in the **Sour
 
 Pick any source from the dropdown to see:
 - **Health score over time** — a line chart across every audit run for that source
-- **Cost over time** — how the estimated dollar cost of issues has moved
-- **Full run history table** — every run's row count, column count, score, and cost, most recent first
+- **Cost over time** — how the severity-weighted total has moved
+- **Full run history table** — every run's row count, column count, score, and severity-weighted cost, most recent first
 
 This is what turns a one-off audit into ongoing monitoring — re-run an audit on the same source periodically and watch whether things are improving or degrading.
 
@@ -334,7 +335,7 @@ Pass the rules file via `--rules` on the CLI, or via the `options.rules` field o
 | `/audit/db-table` | `POST` | Audit a live database table via a connection string |
 | `/sources` | `GET` | List every dataset audited so far |
 | `/audit-runs/{id}` | `GET` | Full detail for one run — column stats and issues |
-| `/trends/{source_id}` | `GET` | Health score and cost history for a source |
+| `/trends/{source_id}` | `GET` | Health score and severity-weighted cost history for a source |
 
 Full interactive documentation, with request/response schemas and a "Try it out" button for every endpoint, is available at **[/docs](https://datasentry-07z4.onrender.com/docs)**.
 
@@ -383,5 +384,5 @@ DataSentry is under active development. Coming soon:
 </p>
 
 <div align="center">
-<sub>Built to answer one question: what is bad data actually costing you?</sub>
+<sub>Built to answer one question: given the issues in your data, which ones matter most?</sub>
 </div>
