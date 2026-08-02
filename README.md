@@ -14,8 +14,6 @@
 
 <p>
   <img src="https://img.shields.io/badge/status-live-brightgreen?style=flat-square" />
-  <img src="https://img.shields.io/badge/tests-passing-success?style=flat-square" />
-  <img src="https://img.shields.io/badge/build-stable-blue?style=flat-square" />
 </p>
 
 <h3>
@@ -79,7 +77,7 @@ Nulls, exact and key-based duplicates, malformed emails/phones/dates, statistica
 </td>
 <td width="50%">
 
-**💰 Severity-Weighted Scoring**
+**⚖️ Severity-Weighted Scoring**
 Every issue type carries a configurable weight (in `config/cost_config.yaml`), rolled into a total figure. This is a heuristic you tune to your own priorities — not a validated financial estimate.
 
 **📈 Trend Tracking**
@@ -237,10 +235,10 @@ Audit a table in *any* database you have credentials for — the same engine tha
 
 1. Run the API and dashboard locally (see [Getting Started](#-getting-started))
 2. Set an environment variable before starting the dashboard:
-   ```bash
+```bash
    export ENABLE_DB_AUDIT_UI=true   # Windows: set ENABLE_DB_AUDIT_UI=true
    streamlit run dashboard/app.py
-   ```
+```
 3. In the now-visible form, fill in:
 
    | Field | Example |
@@ -370,9 +368,6 @@ pytest tests/
 DataSentry is under active development. Coming soon:
 
 - 🐳 **Docker** — a single `docker-compose up` bringing up Postgres, the API, and the dashboard together
-- 🎨 **UI refresh** — a more polished dashboard experience: better visual hierarchy, richer issue drill-downs, clearer trend visualizations
-
----
 
 ## 👤 Author
 
