@@ -12,8 +12,6 @@ from __future__ import annotations
 import os
 
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import requests
 import streamlit as st
 
@@ -52,14 +50,6 @@ CUSTOM_CSS = """
     --shadow-sm:    0 1px 2px rgba(16, 24, 40, 0.05);
     --shadow-md:    0 4px 10px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.05);
     --shadow-lg:    0 8px 20px rgba(16, 24, 40, 0.08);
-
-    /* Colorful chart/accent palette — used for KPI accents and Plotly charts */
-    --chart-1: #4F46E5;  /* indigo   */
-    --chart-2: #0EA5E9;  /* sky      */
-    --chart-3: #F59E0B;  /* amber    */
-    --chart-4: #EC4899;  /* pink     */
-    --chart-5: #14B8A6;  /* teal     */
-    --chart-6: #EF4444;  /* red      */
 }
 
 html, body, [data-testid="stAppViewContainer"] {
@@ -192,29 +182,16 @@ html, body, [data-testid="stAppViewContainer"] {
     box-shadow: none;
 }
 
-/* ---- Metrics — heavier cards with a colorful top accent per position ---- */
+/* ---- Metrics ---- */
 [data-testid="stMetric"] {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1rem 1.1rem;
-    box-shadow: var(--shadow-md);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-    position: relative;
-    overflow: hidden;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
-[data-testid="stMetric"]::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--chart-1);
-}
-div[data-testid="column"]:nth-of-type(4n+1) [data-testid="stMetric"]::before { background: var(--chart-1); }
-div[data-testid="column"]:nth-of-type(4n+2) [data-testid="stMetric"]::before { background: var(--chart-2); }
-div[data-testid="column"]:nth-of-type(4n+3) [data-testid="stMetric"]::before { background: var(--chart-3); }
-div[data-testid="column"]:nth-of-type(4n+4) [data-testid="stMetric"]::before { background: var(--chart-4); }
-[data-testid="stMetric"]:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+[data-testid="stMetric"]:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 [data-testid="stMetricLabel"] {
     font-family: 'Inter', sans-serif;
     color: var(--text-muted);
@@ -226,33 +203,7 @@ div[data-testid="column"]:nth-of-type(4n+4) [data-testid="stMetric"]::before { b
 [data-testid="stMetricValue"] {
     font-family: 'Inter', sans-serif;
     color: var(--text);
-    font-weight: 800;
-    font-size: 1.5rem !important;
-}
-
-/* ---- Section panel — for grouping charts/tables into a card-like block ---- */
-.ds-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1.3rem 1.4rem;
-    box-shadow: var(--shadow-md);
-    margin-bottom: 1rem;
-}
-.ds-panel-title {
-    font-family: 'Inter', sans-serif;
     font-weight: 700;
-    font-size: 0.95rem;
-    color: var(--text);
-    margin-bottom: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.ds-panel-title .ds-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    display: inline-block;
 }
 
 /* ---- Dataframes & alerts ---- */
@@ -268,17 +219,6 @@ div[data-testid="column"]:nth-of-type(4n+4) [data-testid="stMetric"]::before { b
     font-family: 'Inter', sans-serif;
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
-}
-
-/* ---- Real bordered containers (st.container(border=True)) — used as panel
-   cards so a chart's title and its chart actually share one card, instead
-   of a styled title floating above an unstyled chart. ---- */
-[data-testid="stVerticalBlockBorderWrapper"] {
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 14px !important;
-    box-shadow: var(--shadow-md) !important;
-    padding: 0.4rem 0.2rem !important;
 }
 
 hr { border-color: var(--border) !important; margin: 1.4rem 0 !important; }
@@ -356,14 +296,16 @@ h1, h2, h3 {
     color: var(--text) !important;
 }
 
-/* ---- Circular health gauge — clean, single fill animation on load.
-   No border/shadow of its own — it now lives inside a real
-   st.container(border=True), so its own card styling would double up. ---- */
+/* ---- Circular health gauge — clean, single fill animation on load ---- */
 .ds-gauge-wrap {
     display: flex;
     align-items: center;
     gap: 1.4rem;
-    padding: 0.6rem 0.4rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.15rem 1.4rem;
+    box-shadow: var(--shadow-sm);
 }
 .ds-gauge-svg circle.ds-gauge-track { fill: none; stroke: var(--surface-2); stroke-width: 8; }
 .ds-gauge-svg circle.ds-gauge-fill {
@@ -477,7 +419,7 @@ def render_score_gauge(score: float) -> None:
     offset = circumference * (1 - score / 100)
 
     gauge_html = f"""
-    <div class="ds-gauge-wrap">
+    <div class="ds-gauge-wrap ds-fade-in">
         <svg class="ds-gauge-svg" width="110" height="110" viewBox="0 0 110 110">
             <circle class="ds-gauge-track" cx="55" cy="55" r="{radius}"></circle>
             <circle class="ds-gauge-fill" cx="55" cy="55" r="{radius}"
@@ -495,28 +437,11 @@ def render_score_gauge(score: float) -> None:
     st.markdown(gauge_html, unsafe_allow_html=True)
 
 
-CHART_PALETTE = ["#4F46E5", "#0EA5E9", "#F59E0B", "#EC4899", "#14B8A6", "#EF4444", "#8B5CF6", "#22C55E"]
-
-
-def _plotly_layout_defaults(fig: go.Figure, height: int = 300) -> go.Figure:
-    fig.update_layout(
-        height=height,
-        margin=dict(l=10, r=10, t=10, b=10),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter, sans-serif", color="#101828", size=12),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.25, x=0.5, xanchor="center"),
-    )
-    fig.update_xaxes(showgrid=False, zeroline=False)
-    fig.update_yaxes(showgrid=True, gridcolor="#F1F3F6", zeroline=False)
-    return fig
-
-
 def render_audit_result(result: dict) -> None:
     st.subheader("Audit result")
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Rows", f"{result['row_count']:,}")
+    c1.metric("Rows", result["row_count"])
     c2.metric("Columns", result["column_count"])
     c3.metric("Severity-weighted cost", f"${result['total_cost']:,.2f}")
     c4.metric("Audit run ID", result["id"])
@@ -525,24 +450,7 @@ def render_audit_result(result: dict) -> None:
         "not a validated financial estimate. Adjust it in `config/cost_config.yaml`."
     )
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    gauge_col, note_col = st.columns([1, 2])
-    with gauge_col:
-        with st.container(border=True):
-            render_score_gauge(result["health_score"])
-    with note_col:
-        with st.container(border=True):
-            st.markdown(
-                '<div class="ds-panel-title"><span class="ds-dot" style="background: var(--primary);"></span>What this score means</div>',
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                "85+ is healthy, 60–84 needs attention, below 60 is critical. The score weighs "
-                "nulls, duplicates, format issues, outliers, and rule violations equally by "
-                "default — adjust the weighting in `engine/scoring.py` if one dimension "
-                "matters more for your data."
-            )
+    render_score_gauge(result["health_score"])
 
     st.divider()
     render_issue_drilldown(result["id"])
@@ -554,72 +462,24 @@ def render_issue_drilldown(audit_run_id: int) -> None:
         st.warning("Could not load issue detail for this audit run.")
         return
 
-    st.subheader(f"Issues found ({len(detail['issues'])})")
-
-    if detail["issues"]:
-        issues_df = pd.DataFrame(detail["issues"])
-        issue_counts = issues_df["issue_type"].value_counts().reset_index()
-        issue_counts.columns = ["issue_type", "count"]
-
-        col_chart, col_table = st.columns([1, 1.4])
-        with col_chart:
-            with st.container(border=True):
-                st.markdown(
-                    '<div class="ds-panel-title"><span class="ds-dot" style="background: var(--chart-4);"></span>Issue breakdown</div>',
-                    unsafe_allow_html=True,
-                )
-                fig = px.pie(
-                    issue_counts, names="issue_type", values="count",
-                    hole=0.55, color_discrete_sequence=CHART_PALETTE,
-                )
-                fig.update_traces(
-                    textposition="outside", textinfo="label+percent",
-                    marker=dict(line=dict(color="#FFFFFF", width=2)),
-                    hovertemplate="<b>%{label}</b><br>%{value} issues (%{percent})<extra></extra>",
-                )
-                st.plotly_chart(_plotly_layout_defaults(fig, height=290), use_container_width=True, config={"displayModeBar": False})
-        with col_table:
-            with st.container(border=True):
-                st.markdown(
-                    '<div class="ds-panel-title"><span class="ds-dot" style="background: var(--chart-1);"></span>Issue detail</div>',
-                    unsafe_allow_html=True,
-                )
-                st.dataframe(issues_df, use_container_width=True, hide_index=True, height=250)
-    else:
-        st.success("No issues found — this dataset is clean.")
-
-    st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("Column profile")
     if detail["column_stats"]:
         stats_df = pd.DataFrame(detail["column_stats"])
-        col_chart2, col_table2 = st.columns([1, 1.4])
-        with col_chart2:
-            with st.container(border=True):
-                st.markdown(
-                    '<div class="ds-panel-title"><span class="ds-dot" style="background: var(--chart-2);"></span>Null % by column</div>',
-                    unsafe_allow_html=True,
-                )
-                sorted_stats = stats_df.sort_values("null_pct", ascending=True)
-                fig2 = px.bar(
-                    sorted_stats, x="null_pct", y="column_name",
-                    orientation="h", color="null_pct", color_continuous_scale=["#0EA5E9", "#EF4444"],
-                    labels={"null_pct": "% null", "column_name": ""},
-                )
-                fig2.update_traces(
-                    marker=dict(line=dict(color="#FFFFFF", width=0.5)),
-                    hovertemplate="<b>%{y}</b><br>%{x}% null<extra></extra>",
-                )
-                fig2.update_layout(coloraxis_showscale=False, bargap=0.35)
-                st.plotly_chart(_plotly_layout_defaults(fig2, height=290), use_container_width=True, config={"displayModeBar": False})
-        with col_table2:
-            with st.container(border=True):
-                st.markdown(
-                    '<div class="ds-panel-title"><span class="ds-dot" style="background: var(--chart-5);"></span>Column stats</div>',
-                    unsafe_allow_html=True,
-                )
-                st.dataframe(stats_df, use_container_width=True, hide_index=True, height=250)
+        st.dataframe(stats_df, use_container_width=True, hide_index=True)
     else:
         st.write("No column statistics available.")
+
+    st.subheader(f"Issues found ({len(detail['issues'])})")
+    if detail["issues"]:
+        issues_df = pd.DataFrame(detail["issues"])
+        issue_counts = issues_df["issue_type"].value_counts()
+        col_chart, col_table = st.columns([1, 2])
+        with col_chart:
+            st.bar_chart(issue_counts)
+        with col_table:
+            st.dataframe(issues_df, use_container_width=True, hide_index=True)
+    else:
+        st.success("No issues found — this dataset is clean.")
 
 
 def render_trend(source_id: int) -> None:
@@ -632,43 +492,12 @@ def render_trend(source_id: int) -> None:
     df["run_at"] = pd.to_datetime(df["run_at"])
     df = df.sort_values("run_at")
 
-    col_a, col_b = st.columns(2)
-    with col_a:
-        with st.container(border=True):
-            st.markdown(
-                '<div class="ds-panel-title"><span class="ds-dot" style="background: var(--chart-1);"></span>Health score over time</div>',
-                unsafe_allow_html=True,
-            )
-            fig_score = go.Figure()
-            fig_score.add_trace(go.Scatter(
-                x=df["run_at"], y=df["health_score"], mode="lines+markers",
-                line=dict(color="#4F46E5", width=3, shape="spline"),
-                marker=dict(size=8, color="#4F46E5", line=dict(color="#FFFFFF", width=1.5)),
-                fill="tozeroy", fillcolor="rgba(79, 70, 229, 0.10)",
-                hovertemplate="<b>%{x|%b %d, %H:%M}</b><br>Score: %{y:.1f}<extra></extra>",
-            ))
-            fig_score.update_yaxes(range=[0, 105])
-            st.plotly_chart(_plotly_layout_defaults(fig_score, height=270), use_container_width=True, config={"displayModeBar": False})
-    with col_b:
-        with st.container(border=True):
-            st.markdown(
-                '<div class="ds-panel-title"><span class="ds-dot" style="background: var(--chart-4);"></span>Severity-weighted cost over time</div>',
-                unsafe_allow_html=True,
-            )
-            fig_cost = go.Figure()
-            fig_cost.add_trace(go.Bar(
-                x=df["run_at"], y=df["total_cost"],
-                marker=dict(
-                    color=df["total_cost"],
-                    colorscale=[[0, "#14B8A6"], [0.5, "#F59E0B"], [1, "#EF4444"]],
-                    line=dict(color="#FFFFFF", width=0.5),
-                ),
-                hovertemplate="<b>%{x|%b %d, %H:%M}</b><br>$%{y:,.2f}<extra></extra>",
-            ))
-            fig_cost.update_layout(bargap=0.3)
-            st.plotly_chart(_plotly_layout_defaults(fig_cost, height=270), use_container_width=True, config={"displayModeBar": False})
+    st.subheader("Health score over time")
+    st.line_chart(df.set_index("run_at")["health_score"])
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.subheader("Severity-weighted cost over time")
+    st.line_chart(df.set_index("run_at")["total_cost"])
+
     st.subheader("Run history")
     st.dataframe(
         df[["id", "run_at", "row_count", "column_count", "health_score", "total_cost"]],
