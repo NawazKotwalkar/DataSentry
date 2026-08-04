@@ -17,8 +17,10 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
-API_BASE_URL = os.environ.get("DATASENTRY_API_URL", "http://127.0.0.1:8000")
-
+API_BASE_URL = st.secrets.get(
+    "DATASENTRY_API_URL",
+    "http://127.0.0.1:8000"
+)
 st.set_page_config(page_title="DataSentry", page_icon="🛡️", layout="wide")
 
 
@@ -411,11 +413,18 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 def api_get(path: str, params: dict | None = None) -> dict | list | None:
     try:
-        resp = requests.get(f"{API_BASE_URL}{path}", params=params, timeout=15)
+        resp = requests.get(f"{API_BASE_URL}{path}", params=params, timeout=45)
         if resp.status_code == 404:
             return None
         resp.raise_for_status()
         return resp.json()
+    except requests.exceptions.Timeout:
+        st.warning(
+            "The API took too long to respond. On the free tier it spins down after "
+            "inactivity, and the first request can take 30–50 seconds to wake it up. "
+            "Please wait a moment and try again."
+        )
+        return None
     except requests.exceptions.ConnectionError:
         st.error(f"Could not reach the DataSentry API at {API_BASE_URL}. Is `uvicorn api.main:app` running?")
         st.stop()
@@ -428,9 +437,16 @@ def api_post_upload(file, key_columns: str | None) -> dict | None:
     try:
         files = {"file": (file.name, file.getvalue(), "text/csv")}
         params = {"key_columns": key_columns} if key_columns else {}
-        resp = requests.post(f"{API_BASE_URL}/audit/upload", files=files, params=params, timeout=60)
+        resp = requests.post(f"{API_BASE_URL}/audit/upload", files=files, params=params, timeout=90)
         resp.raise_for_status()
         return resp.json()
+    except requests.exceptions.Timeout:
+        st.warning(
+            "The API took too long to respond. On the free tier it spins down after "
+            "inactivity, and the first request can take 30–50 seconds to wake it up. "
+            "Please wait a moment and try again."
+        )
+        return None
     except requests.exceptions.ConnectionError:
         st.error(f"Could not reach the DataSentry API at {API_BASE_URL}. Is `uvicorn api.main:app` running?")
         return None
@@ -447,9 +463,16 @@ def api_post_db_table(connection_string: str, table_name: str, key_columns: str 
         }
         if key_columns:
             body["options"] = {"key_columns": [c.strip() for c in key_columns.split(",")]}
-        resp = requests.post(f"{API_BASE_URL}/audit/db-table", json=body, timeout=60)
+        resp = requests.post(f"{API_BASE_URL}/audit/db-table", json=body, timeout=90)
         resp.raise_for_status()
         return resp.json()
+    except requests.exceptions.Timeout:
+        st.warning(
+            "The API took too long to respond. On the free tier it spins down after "
+            "inactivity, and the first request can take 30–50 seconds to wake it up. "
+            "Please wait a moment and try again."
+        )
+        return None
     except requests.exceptions.ConnectionError:
         st.error(f"Could not reach the DataSentry API at {API_BASE_URL}. Is `uvicorn api.main:app` running?")
         return None
@@ -499,16 +522,22 @@ CHART_PALETTE = ["#4F46E5", "#0EA5E9", "#F59E0B", "#EC4899", "#14B8A6", "#EF4444
 
 
 def _plotly_layout_defaults(fig: go.Figure, height: int = 300) -> go.Figure:
+    # Explicit white backgrounds (not transparent) and an explicit light
+    # template — this makes charts render correctly regardless of whether
+    # Streamlit's own theme resolves to light or dark. Transparent
+    # backgrounds were the root cause of the washed-out "ghosting" look:
+    # they let a dark background bleed through behind light chart text.
     fig.update_layout(
+        template="plotly_white",
         height=height,
         margin=dict(l=10, r=10, t=10, b=10),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="#FFFFFF",
+        plot_bgcolor="#FFFFFF",
         font=dict(family="Inter, sans-serif", color="#101828", size=12),
-        legend=dict(orientation="h", yanchor="bottom", y=-0.25, x=0.5, xanchor="center"),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25, x=0.5, xanchor="center", font=dict(color="#101828")),
     )
-    fig.update_xaxes(showgrid=False, zeroline=False)
-    fig.update_yaxes(showgrid=True, gridcolor="#F1F3F6", zeroline=False)
+    fig.update_xaxes(showgrid=False, zeroline=False, color="#101828", tickfont=dict(color="#101828"))
+    fig.update_yaxes(showgrid=True, gridcolor="#E4E7EC", zeroline=False, color="#101828", tickfont=dict(color="#101828"))
     return fig
 
 
@@ -697,8 +726,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-ENABLE_DB_AUDIT_UI = os.environ.get("ENABLE_DB_AUDIT_UI", "false").lower() == "true"
-
+ENABLE_DB_AUDIT_UI = st.secrets.get(
+    "ENABLE_DB_AUDIT_UI",
+    "false"
+).lower() == "true"
 if "last_result" not in st.session_state:
     st.session_state.last_result = None
 
