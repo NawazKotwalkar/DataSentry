@@ -606,14 +606,14 @@ def render_issue_drilldown(audit_run_id: int) -> None:
                     marker=dict(line=dict(color="#FFFFFF", width=2)),
                     hovertemplate="<b>%{label}</b><br>%{value} issues (%{percent})<extra></extra>",
                 )
-                st.plotly_chart(_plotly_layout_defaults(fig, height=290), use_container_width=True, config={"displayModeBar": False}, key=f"issue_pie_{audit_run_id}")
+                st.plotly_chart(_plotly_layout_defaults(fig, height=290), use_container_width=True, config={"displayModeBar": False})
         with col_table:
             with st.container(border=True):
                 st.markdown(
                     '<div class="ds-panel-title"><span class="ds-dot" style="background: var(--chart-1);"></span>Issue detail</div>',
                     unsafe_allow_html=True,
                 )
-                st.dataframe(issues_df, use_container_width=True, hide_index=True, height=250, key=f"issues_df_{audit_run_id}")
+                st.dataframe(issues_df, use_container_width=True, hide_index=True, height=250)
     else:
         st.success("No issues found — this dataset is clean.")
 
@@ -639,14 +639,14 @@ def render_issue_drilldown(audit_run_id: int) -> None:
                     hovertemplate="<b>%{y}</b><br>%{x}% null<extra></extra>",
                 )
                 fig2.update_layout(coloraxis_showscale=False, bargap=0.35)
-                st.plotly_chart(_plotly_layout_defaults(fig2, height=290), use_container_width=True, config={"displayModeBar": False}, key=f"issue_pie_{audit_run_id}")
+                st.plotly_chart(_plotly_layout_defaults(fig2, height=290), use_container_width=True, config={"displayModeBar": False})
         with col_table2:
             with st.container(border=True):
                 st.markdown(
                     '<div class="ds-panel-title"><span class="ds-dot" style="background: var(--chart-5);"></span>Column stats</div>',
                     unsafe_allow_html=True,
                 )
-                st.dataframe(stats_df, use_container_width=True, hide_index=True, height=250, key=f"stats_df_{audit_run_id}")
+                st.dataframe(stats_df, use_container_width=True, hide_index=True, height=250)
     else:
         st.write("No column statistics available.")
 
@@ -677,7 +677,7 @@ def render_trend(source_id: int) -> None:
                 hovertemplate="<b>%{x|%b %d, %H:%M}</b><br>Score: %{y:.1f}<extra></extra>",
             ))
             fig_score.update_yaxes(range=[0, 105])
-            st.plotly_chart(_plotly_layout_defaults(fig_score, height=270), use_container_width=True, config={"displayModeBar": False}, key=f"issue_pie_{audit_run_id}")
+            st.plotly_chart(_plotly_layout_defaults(fig_score, height=270), use_container_width=True, config={"displayModeBar": False})
     with col_b:
         with st.container(border=True):
             st.markdown(
@@ -695,7 +695,7 @@ def render_trend(source_id: int) -> None:
                 hovertemplate="<b>%{x|%b %d, %H:%M}</b><br>$%{y:,.2f}<extra></extra>",
             ))
             fig_cost.update_layout(bargap=0.3)
-            st.plotly_chart(_plotly_layout_defaults(fig_cost, height=270), use_container_width=True, config={"displayModeBar": False}, key=f"issue_pie_{audit_run_id}")
+            st.plotly_chart(_plotly_layout_defaults(fig_cost, height=270), use_container_width=True, config={"displayModeBar": False})
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("Run history")
