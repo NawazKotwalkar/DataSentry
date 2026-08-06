@@ -752,9 +752,6 @@ with tab_upload:
         if result:
             st.session_state.last_result = result
 
-    if st.session_state.last_result:
-        st.divider()
-        render_audit_result(st.session_state.last_result)
 
 with tab_db:
     st.subheader("Audit a live database table")
@@ -792,9 +789,6 @@ with tab_db:
             if result:
                 st.session_state.last_result = result
 
-        if st.session_state.last_result:
-            st.divider()
-            render_audit_result(st.session_state.last_result)
 
 with tab_sources:
     st.subheader("Audited sources")
@@ -815,3 +809,7 @@ with tab_trends:
         selected_label = st.selectbox("Choose a source", list(source_options.keys()))
         if selected_label:
             render_trend(source_options[selected_label])
+
+if st.session_state.last_result:
+    st.divider()
+    render_audit_result(st.session_state.last_result)

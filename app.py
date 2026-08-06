@@ -17,8 +17,10 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
-API_BASE_URL = os.environ.get("DATASENTRY_API_URL", "http://127.0.0.1:8000")
-
+API_BASE_URL = st.secrets.get(
+    "DATASENTRY_API_URL",
+    "http://127.0.0.1:8000"
+)
 st.set_page_config(page_title="DataSentry", page_icon="🛡️", layout="wide")
 
 
@@ -604,7 +606,7 @@ def render_issue_drilldown(audit_run_id: int) -> None:
                     marker=dict(line=dict(color="#FFFFFF", width=2)),
                     hovertemplate="<b>%{label}</b><br>%{value} issues (%{percent})<extra></extra>",
                 )
-                st.plotly_chart(_plotly_layout_defaults(fig, height=290), use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(_plotly_layout_defaults(fig, height=290), use_container_width=True, config={"displayModeBar": False}, key=f"issue_breakdown_{audit_run_id}")
         with col_table:
             with st.container(border=True):
                 st.markdown(
@@ -637,7 +639,7 @@ def render_issue_drilldown(audit_run_id: int) -> None:
                     hovertemplate="<b>%{y}</b><br>%{x}% null<extra></extra>",
                 )
                 fig2.update_layout(coloraxis_showscale=False, bargap=0.35)
-                st.plotly_chart(_plotly_layout_defaults(fig2, height=290), use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(_plotly_layout_defaults(fig2, height=290), use_container_width=True, config={"displayModeBar": False}, key=f"null_profile_{audit_run_id}")
         with col_table2:
             with st.container(border=True):
                 st.markdown(
@@ -675,7 +677,7 @@ def render_trend(source_id: int) -> None:
                 hovertemplate="<b>%{x|%b %d, %H:%M}</b><br>Score: %{y:.1f}<extra></extra>",
             ))
             fig_score.update_yaxes(range=[0, 105])
-            st.plotly_chart(_plotly_layout_defaults(fig_score, height=270), use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(_plotly_layout_defaults(fig_score, height=270), use_container_width=True, config={"displayModeBar": False}, key=f"trend_score_{source_id}")
     with col_b:
         with st.container(border=True):
             st.markdown(
@@ -693,7 +695,7 @@ def render_trend(source_id: int) -> None:
                 hovertemplate="<b>%{x|%b %d, %H:%M}</b><br>$%{y:,.2f}<extra></extra>",
             ))
             fig_cost.update_layout(bargap=0.3)
-            st.plotly_chart(_plotly_layout_defaults(fig_cost, height=270), use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(_plotly_layout_defaults(fig_cost, height=270), use_container_width=True, config={"displayModeBar": False}, key=f"trend_cost_{source_id}")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("Run history")
@@ -724,8 +726,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-ENABLE_DB_AUDIT_UI = os.environ.get("ENABLE_DB_AUDIT_UI", "false").lower() == "true"
-
+ENABLE_DB_AUDIT_UI = st.secrets.get(
+    "ENABLE_DB_AUDIT_UI",
+    "false"
+).lower() == "true"
 if "last_result" not in st.session_state:
     st.session_state.last_result = None
 
@@ -747,6 +751,7 @@ with tab_upload:
             result = api_post_upload(uploaded_file, key_columns_input or None)
         if result:
             st.session_state.last_result = result
+
 
 with tab_db:
     st.subheader("Audit a live database table")
@@ -804,6 +809,7 @@ with tab_trends:
         selected_label = st.selectbox("Choose a source", list(source_options.keys()))
         if selected_label:
             render_trend(source_options[selected_label])
+
 if st.session_state.last_result:
     st.divider()
     render_audit_result(st.session_state.last_result)
